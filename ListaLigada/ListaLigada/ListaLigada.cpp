@@ -9,7 +9,7 @@ using namespace std;
 // ---------------------------------------------------------------------------
 struct NO {
 	int valor;
-	NO* prox;
+	NO* prox; // variável com um * no final significa que é um ponteiro, ou seja, guarda o endereço de outro nó
 };
 
 // Ponto de entrada da lista. NULL significa lista vazia.
@@ -143,59 +143,112 @@ void exibirElementos()
 
 void inserirElemento()
 {
-	// 1) Primeiro lemos o valor em uma variável local...
+	// Declara uma caixinha temporária de número inteiro para guardar o valor digitado
 	int valor;
+
+	// Mostra a mensagem na tela pedindo o número para o usuário
 	cout << "Digite o elemento: ";
+
+	// Lê o número que o usuário digitou no teclado e guarda na variável 'valor'
 	cin >> valor;
 
-	// -----------------------------------------------------------------
-	// TAREFA 1: antes de alocar memória, verifique se 'valor' já existe
-	// na lista (dica: use posicaoElemento). Se existir, avise o usuário
-	// e saia da função com return.
-	// Como nada foi alocado até aqui, sair neste ponto NÃO causa
-	// vazamento de memória.
-	// -----------------------------------------------------------------
+	// TAREFA 1: Usa a função posicaoElemento para ver se esse número já está na lista
+	if (posicaoElemento(valor) != NULL) {
 
-	// 2) ...e só depois alocamos memória para o novo nó
-	NO* novo = (NO*)malloc(sizeof(NO));
-	if (novo == NULL)
-	{
-		cout << "Erro: memoria insuficiente \n";
+		// Se o retorno NÃO for NULL, significa que o número já existe!
+		cout << "Elemento ja existe na lista, Insercao cancelada\n";
+
+		// Para a execução da função aqui mesmo para não duplicar nada
 		return;
 	}
-	novo->valor = valor;
-	novo->prox = NULL;   // o novo nó será o último da lista
 
-	if (primeiro == NULL)
-	{
-		// lista vazia: o novo nó passa a ser o primeiro
+	// Pede ao computador um espaço na memória do tamanho de um nó (uma nova caixinha)
+	NO* novo = (NO*)malloc(sizeof(NO));
+
+	// Verifica se o computador ficou sem memória (se o malloc retornou NULL)
+	if (novo == NULL) {
+		cout << "Memoria insuficiente \n";
+		return; // Sai da função se não houver memória
+	}
+
+	// Guarda o número digitado dentro do campo 'valor' da nossa nova caixinha
+	novo->valor = valor;
+
+	// Coloca NULL na setinha 'prox' porque, por enquanto, ele é o último da lista
+	novo->prox = NULL;
+
+	// Pergunta: o ponteiro 'primeiro' está apontando para NULL? (Lista vazia?)
+	if (primeiro == NULL) {
+
+		// Se a lista estiver vazia, o nosso 'novo' nó passa a ser o primeiro da lista
 		primeiro = novo;
 	}
-	else
-	{
-		// procura o final da lista (o nó cujo prox é NULL)
+	else {
+		// Se a lista NÃO estiver vazia, precisamos achar o final dela
+
+		// Cria um ponteiro auxiliar 'aux' que começa apontando para o início da lista
 		NO* aux = primeiro;
+
+		// Faz o 'aux' caminhar de caixinha em caixinha até achar a última (onde prox é NULL)
 		while (aux->prox != NULL) {
 			aux = aux->prox;
 		}
+
+		// Chegando no final, faz a setinha do último nó apontar para o nosso 'novo' nó
 		aux->prox = novo;
 	}
 }
 
 void excluirElemento()
 {
-	// -----------------------------------------------------------------
-	// TAREFA 3
-	// 1. Peça o número e use posicaoElemento() para saber se ele existe.
-	//    Se não existir, exiba "ELEMENTO NAO ENCONTRADO" e saia.
-	// 2. Caso A - o nó é o primeiro: atualize 'primeiro' para o segundo
-	//    nó ANTES de liberar o nó removido.
-	// 3. Caso B - meio ou fim: percorra a lista com dois ponteiros
-	//    (anterior e atual), faça anterior->prox apontar para atual->prox
-	//    e só então libere 'atual'.
-	// Lembre-se: todo nó removido precisa de free(), e um nó liberado
-	// nunca mais deve ser usado.
-	// -----------------------------------------------------------------
+	// 1. Cria uma variável para guardar o número que o usuário quer apagar
+	int valor;
+	cout << "Digite o elemento que deseja excluir: ";
+	cin >> valor;
+
+	// 2. Verifica se o elemento realmente existe usando posicaoElemento()[cite: 4]
+	if (posicaoElemento(valor) == NULL) {
+		// Se retornar NULL, o elemento não está na lista[cite: 4]
+		cout << "ELEMENTO NAO ENCONTRADO\n";
+		return; // Sai da função
+	}
+
+	// 3. CASO A: O elemento a ser excluído é o PRIMEIRO da lista
+	if (primeiro->valor == valor) {
+		// Guarda o endereço do primeiro nó temporariamente para não perder
+		NO* paraExcluir = primeiro;
+
+		// O ponteiro 'primeiro' pula para o segundo nó da lista (primeiro->prox)
+		primeiro = primeiro->prox;
+
+		// Libera a memória do nó antigo que estava na frente[cite: 5]
+		free(paraExcluir);
+
+		cout << "Elemento excluido com sucesso!\n";
+		return;
+	}
+
+	// 4. CASO B: O elemento está no MEIO ou no FIM da lista[cite: 5]
+	// Precisamos de dois ponteiros: 'anterior' e 'atual'[cite: 5]
+	NO* anterior = primeiro;
+	NO* atual = primeiro->prox; // 'atual' começa no segundo elemento
+
+	// Percorre a lista até achar o elemento que queremos excluir[cite: 5]
+	while (atual != NULL && atual->valor != valor) {
+		anterior = atual;       // O 'anterior' acompanha o 'atual'
+		atual = atual->prox;    // O 'atual' avança para o próximo
+	}
+
+	// Se o 'atual' encontrou o valor procurado:
+	if (atual != NULL) {
+		// Religa a lista: o 'anterior->prox' pula o 'atual' e aponta direto para o 'atual->prox'[cite: 5]
+		anterior->prox = atual->prox;
+
+		// Agora que o nó 'atual' está isolado, liberamos a memória dele com free[cite: 5]
+		free(atual);
+
+		cout << "Elemento excluido com sucesso!\n";
+	}
 }
 
 void buscarElemento()
